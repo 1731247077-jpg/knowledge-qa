@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>知识库问答</title>
+<style>
+/* 浅色主题 */
+:root {
+  --bg: #f4f6fb; --panel: rgba(255,255,255,.78); --panel-solid: #ffffff;
+  --line: rgba(28,39,64,.09); --line-strong: rgba(28,39,64,.16);
+  --ink: #1d2536; --ink-2: #57617a; --ink-3: #8e97ab;
+  --grad: linear-gradient(135deg,#4066f0 0%,#8b52e8 100%);
+  --grad-soft: linear-gradient(135deg,rgba(64,102,240,.10) 0%,rgba(139,82,232,.10) 100%);
+  --glow: 0 2px 14px rgba(80,110,240,.20); --danger: #e5484d; --radius: 12px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: -apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.65; overflow: hidden; }
+.hidden { display: none !important; }
+.bg-orbs { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: .4; }
+.orb-1 { width: 480px; height: 480px; left: -140px; top: -160px; background: rgba(93,127,245,.14); }
+.orb-2 { width: 420px; height: 420px; right: -120px; bottom: -140px; background: rgba(150,98,238,.10); }
+.orb-3 { width: 300px; height: 300px; right: 22%; top: -120px; background: rgba(56,169,248,.08); }
+.bg-grid { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: linear-gradient(rgba(28,39,64,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(28,39,64,.045) 1px,transparent 1px); background-size: 44px 44px; -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 75%); mask-image: radial-gradient(ellipse 90% 70% at 50% 0%,#000 30%,transparent 75%); }
+.app { position: relative; z-index: 1; display: flex; height: 100vh; }
+.sidebar { width: 232px; flex: none; background: rgba(255,255,255,.72); backdrop-filter: blur(18px); border-right: 1px solid var(--line); padding: 22px 14px 18px; display: flex; flex-direction: column; gap: 26px; }
+.brand { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+.brand-mark { width: 36px; height: 36px; border-radius: 10px; background: var(--grad); display: grid; place-items: center; font-weight: 700; font-size: 17px; color: #fff; box-shadow: var(--glow); }
+.brand-name { font-weight: 700; font-size: 15.5px; letter-spacing: 1px; }
+.brand-sub { font-size: 11px; color: var(--ink-3); letter-spacing: 2px; margin-top: 1px; }
+.nav-group-label { padding: 0 10px 8px; font-size: 11px; color: var(--ink-3); letter-spacing: 2px; }
+nav { display: flex; flex-direction: column; gap: 6px; }
+.nav-item { position: relative; display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 13px; background: none; border: 1px solid transparent; border-radius: 10px; font-size: 14px; color: var(--ink-2); cursor: pointer; text-align: left; transition: all .18s ease; }
+.nav-item:hover { background: rgba(28,39,64,.05); color: var(--ink); }
+.nav-item.active { background: var(--grad-soft); border-color: rgba(80,110,240,.40); color: #3b4bc0; font-weight: 600; }
+.nav-item.active::before { content: ""; position: absolute; left: -14px; top: 50%; transform: translateY(-50%); width: 3px; height: 18px; border-radius: 2px; background: var(--grad); box-shadow: var(--glow); }
+.nav-ico { font-size: 15px; opacity: .9; }
+.nav-badge { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; background: rgba(28,39,64,.08); font-size: 11px; color: var(--ink-2); display: grid; place-items: center; }
+.nav-item.active .nav-badge { background: rgba(80,110,240,.16); color: #3b4bc0; }
+.sidebar-foot { margin-top: auto; padding: 0 8px; font-size: 12px; color: var(--ink-3); }
+.sidebar-foot b { color: var(--ink-2); font-weight: 600; }
+.side-actions { display: flex; gap: 8px; padding: 10px 8px 0; }
+.main { flex: 1; overflow-y: auto; position: relative; }
+.view { max-width: 880px; margin: 0; padding: 40px 56px 70px 36px; }
+.view-head { margin-bottom: 26px; }
+.view-head h1 { font-size: 24px; font-weight: 800; letter-spacing: .5px; background: linear-gradient(90deg,#1d2536 30%,#4459c8 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.view-head .sub { font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+.view-head-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.head-actions { display: flex; gap: 10px; flex: none; }
+.btn { border: 1px solid var(--line-strong); background: rgba(255,255,255,.60); border-radius: 10px; padding: 9px 16px; font-size: 13px; color: var(--ink); cursor: pointer; transition: all .16s ease; }
+.btn:hover { background: rgba(28,39,64,.08); border-color: rgba(28,39,64,.18); }
+.btn:active { transform: translateY(1px); }
+.btn.primary { background: var(--grad); border: none; color: #fff; font-weight: 600; box-shadow: 0 4px 18px rgba(70,90,220,.30); }
+.btn.primary:hover { box-shadow: 0 6px 24px rgba(70,90,220,.45); filter: brightness(1.08); }
+.btn.ghost { background: transparent; }
+.btn.danger { color: var(--danger); border-color: rgba(229,72,77,.30); background: transparent; }
+.btn.danger:hover { background: rgba(229,72,77,.08); border-color: rgba(229,72,77,.50); }
+.btn.small { padding: 5px 10px; font-size: 12px; border-radius: 8px; }
+.tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 22px; background: rgba(255,255,255,.60); border: 1px solid var(--line); border-radius: 12px; }
+.tab { padding: 8px 20px; background: none; border: none; border-radius: 9px; font-size: 13.5px; color: var(--ink-2); cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all .18s ease; }
+.tab:hover { color: var(--ink); }
+.tab.active { background: var(--grad); color: #fff; font-weight: 600; box-shadow: 0 3px 14px rgba(70,90,220,.35); }
+.tab .count { font-size: 11px; padding: 1px 7px; border-radius: 9px; background: rgba(255,255,255,.22); }
+.tab:not(.active) .count { background: rgba(28,39,64,.06); color: var(--ink-3); }
+/* ===== v2.6 文件夹管理 ===== */
+#view-assets .folder-bar { flex: none; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 14px; }
+.folder-chip { display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; font-size: 12.5px; line-height: 1.4; border: 1px solid var(--line); background: rgba(255,255,255,.60); border-radius: 999px; color: var(--ink-2); cursor: pointer; transition: all .16s ease; }
+.folder-chip:hover { border-color: rgba(80,110,240,.45); color: var(--ink); background: #fff; }
+.folder-chip.active { background: var(--grad); border-color: transparent; color: #fff; font-weight: 600; box-shadow: 0 3px 14px rgba(70,90,220,.35); }
+.folder-chip .fc-name { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.folder-chip .fc-count { font-size: 10.5px; padding: 1px 7px; border-radius: 9px; background: rgba(28,39,64,.07); color: var(--ink-3); }
+.folder-chip.active .fc-count { background: rgba(255,255,255,.22); color: #fff; }
+.folder-chip .fc-act { display: none; font-size: 11px; opacity: .6; }
+.folder-chip:hover .fc-act { display: inline-block; }
+.folder-chip .fc-act:hover { opacity: 1; transform: scale(1.15); }
+.folder-add { display: inline-flex; align-items: center; gap: 5px; padding: 6px 13px; font-size: 12.5px; border: 1px dashed var(--line-strong); border-radius: 999px; background: transparent; color: var(--ink-3); cursor: pointer; transition: all .16s ease; }
+.folder-add:hover { color: #3b4bc0; border-color: rgba(80,110,240,.55); background: var(--grad-soft); }
+.folder-tag { display: inline-block; margin-left: 6px; font-size: 10.5px; padding: 2px 8px; border-radius: 20px; background: rgba(28,39,64,.06); color: var(--ink-2); border: 1px solid var(--line); vertical-align: 1px; }
+.move-wrap { position: relative; display: inline-flex; }
+.move-menu { position: absolute; top: calc(100% + 6px); left: 0; min-width: 200px; background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 10px; box-shadow: 0 14px 40px rgba(16,24,40,.18); padding: 6px; z-index: 40; display: flex; flex-direction: column; gap: 2px; animation: fadeUp .16s ease; }
+.move-item { text-align: left; padding: 8px 12px; font-size: 13px; border: none; background: none; border-radius: 7px; color: var(--ink); cursor: pointer; transition: background .14s ease; }
+.move-item:hover { background: var(--grad-soft); }
+.move-item.cur { color: #3b4bc0; font-weight: 600; }
+.doc-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.doc-card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; cursor: pointer; backdrop-filter: blur(8px); transition: all .18s ease; overflow: hidden; }
+.doc-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--grad); opacity: 0; transition: opacity .18s ease; }
+.doc-card:hover { border-color: rgba(80,110,240,.45); background: #ffffff; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(28,39,64,.10); }
+.doc-card:hover::before { opacity: 1; }
+.cat-chip { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 20px; background: var(--grad-soft); color: #4458c9; border: 1px solid rgba(80,110,240,.16); }
+.doc-card .cat-chip { margin-bottom: 9px; }
+.doc-card h3 { font-size: 15px; font-weight: 650; margin-bottom: 5px; }
+.doc-card p { font-size: 12.5px; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px; }
+.doc-card .meta { font-size: 11.5px; color: var(--ink-3); margin-top: 10px; }
+
+/* ===== v2.5 双栏阅读器布局：左列表 + 右详情 ===== */
+#view-assets { display: flex; flex-direction: column; height: 100%; max-width: none; padding: 34px 36px 0 36px; }
+#view-assets .view-head { margin-bottom: 16px; flex: none; }
+#view-assets .tabs { margin-bottom: 14px; flex: none; }
+.split { flex: 1; min-height: 0; display: flex; }
+.pane-list { flex: 0 0 372px; min-width: 0; overflow-y: auto; padding: 2px 16px 46px 0; }
+.pane-list .doc-list { grid-template-columns: 1fr; gap: 10px; }
+.pane-list .doc-card { padding: 14px 16px; }
+.pane-list .doc-card:hover { transform: none; }
+.pane-list .doc-card.active { border-color: rgba(80,110,240,.55); background: #fff; box-shadow: 0 8px 24px rgba(28,39,64,.10); }
+.pane-list .doc-card.active::before { opacity: 1; }
+.pane-list .empty { padding: 30px 10px; }
+.pane-detail { flex: 1; min-width: 0; overflow-y: auto; border-left: 1px solid var(--line); background: rgba(255,255,255,.38); padding: 26px 30px 60px; }
+.pane-detail .doc-view { max-width: none; min-height: 100%; display: flex; flex-direction: column; }
+.pane-detail .doc-content { max-height: none; flex: 1; }
+.pane-detail .doc-view .btn.danger { align-self: flex-start; }
+#btnBack { display: none; }
+.detail-empty { height: 100%; min-height: 320px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; color: var(--ink-3); text-align: center; }
+.detail-empty .de-ico { font-size: 42px; opacity: .85; }
+.detail-empty .de-title { font-size: 16px; font-weight: 650; color: var(--ink-2); }
+.detail-empty .de-sub { font-size: 13px; }
+@media (max-width: 960px) {
+  #view-assets { padding: 24px 18px 0; }
+  .split { flex-direction: column; }
+  .pane-list { flex: 1 1 auto; padding-right: 0; }
+  .pane-detail { border-left: none; padding: 18px 4px 60px; }
+  body:not(.detail-open) .pane-detail { display: none; }
+  body.detail-open .pane-list { display: none; }
+  #btnBack { display: inline-block; }
+}
+.empty { border: 1px dashed var(--line-strong); border-radius: 14px; padding: 60px 20px; text-align: center; color: var(--ink-2); font-size: 13.5px; grid-column: 1 / -1; }
+.empty .ico { font-size: 34px; margin-bottom: 12px; opacity: .55; }
+.doc-view { animation: fadeUp .25s ease; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.doc-view h2 { font-size: 21px; margin: 20px 0 6px; font-weight: 700; }
+.doc-meta { font-size: 12px; color: var(--ink-3); margin-bottom: 16px; }
+.doc-content { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 24px 26px; font-family: inherit; white-space: pre-wrap; word-break: break-word; font-size: 14px; max-height: 56vh; overflow-y: auto; backdrop-filter: blur(8px); }
+.doc-view .btn.danger { margin-top: 18px; }
+.doc-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 0 0 16px; }
+.doc-toolbar a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+.doc-toolbar .tip { font-size: 11.5px; color: var(--ink-3); }
+.embed-wrap { border: 1px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; background: rgba(0,0,0,.04); }
+.embed-wrap iframe { width: 100%; height: 72vh; border: 0; display: block; background: #fff; }
+.embed-tip { padding: 8px 14px; font-size: 11.5px; color: var(--ink-3); background: rgba(0,0,0,.05); border-top: 1px solid var(--line); }
+.embed-warn { padding: 22px 24px; font-size: 13px; color: var(--ink-2); line-height: 1.9; }
+.embed-warn b { color: var(--ink); }
+.embed-warn .warn-title { font-size: 14.5px; color: #b07c1a; margin-bottom: 6px; }
+.embed-warn code { background: rgba(28,39,64,.08); padding: 1px 6px; border-radius: 5px; font-size: 12px; }
+.embed-warn-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+.embed-warn-actions a.btn { text-decoration: none; display: inline-flex; align-items: center; }
+.link-note { background: var(--grad-soft); border: 1px solid rgba(124,116,255,.3); border-radius: 10px; padding: 16px 20px; font-size: 13px; color: var(--ink-2); line-height: 1.9; }
+.link-note b { color: var(--ink); }
+.doc-card .link-tag { color: #4a5fd6; font-size: 12.5px; }
+/* Markdown 正文排版 */
+.doc-content.md { white-space: normal; }
+.doc-content.md h1, .doc-content.md h2, .doc-content.md h3, .doc-content.md h4 { margin: 18px 0 8px; font-weight: 700; line-height: 1.4; color: #1d2536; }
+.doc-content.md h1 { font-size: 20px; }
+.doc-content.md h2 { font-size: 18px; }
+.doc-content.md h3 { font-size: 16px; }
+.doc-content.md h4 { font-size: 14.5px; }
+.doc-content.md img { max-width: 100%; border-radius: 8px; margin: 6px 0; display: block; }
+.doc-content.md table { border-collapse: collapse; margin: 12px 0; }
+.doc-content.md th, .doc-content.md td { border: 1px solid var(--line); padding: 6px 10px; font-size: 13px; }
+.doc-content.md th { background: rgba(80,110,240,.07); }
+.doc-content.md p { margin: 8px 0; }
+.doc-content.md ul, .doc-content.md ol { margin: 8px 0 8px 22px; }
+.doc-content.md li { margin: 4px 0; }
+.doc-content.md table { border-collapse: collapse; margin: 12px 0; width: 100%; font-size: 13px; }
+.doc-content.md th, .doc-content.md td { border: 1px solid var(--line-strong); padding: 7px 11px; text-align: left; }
+.doc-content.md th { background: rgba(80,110,240,.10); color: #3b4bc0; font-weight: 600; }
+.doc-content.md code { background: rgba(80,110,240,.10); padding: 1px 6px; border-radius: 5px; font-size: 12.5px; color: #4458c9; }
+.doc-content.md pre.code { background: rgba(0,0,0,.05); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; overflow-x: auto; margin: 10px 0; }
+.doc-content.md pre.code code { background: none; padding: 0; color: var(--ink); }
+.doc-content.md blockquote { border-left: 3px solid rgba(80,110,240,.5); background: rgba(80,110,240,.06); padding: 8px 14px; margin: 10px 0; border-radius: 0 8px 8px 0; color: var(--ink-2); }
+.doc-content.md a { color: #4a5fd6; }
+.doc-content.md hr { border: none; border-top: 1px solid var(--line-strong); margin: 16px 0; }
+#view-qa { display: flex; flex-direction: column; height: 100vh; padding-bottom: 0; max-width: 820px; }
+#view-qa.hidden { display: none; }
+.chat { flex: 1; overflow-y: auto; padding: 4px 2px 24px; display: flex; flex-direction: column; gap: 16px; }
+.msg { display: flex; animation: fadeUp .22s ease; }
+.msg.user { justify-content: flex-end; }
+.bubble { max-width: 80%; padding: 11px 16px; border-radius: 16px; font-size: 14px; }
+.msg.bot .bubble { background: var(--panel); border: 1px solid var(--line); border-top-left-radius: 5px; backdrop-filter: blur(8px); }
+.msg.user .bubble { background: var(--grad); color: #fff; border-top-right-radius: 5px; box-shadow: 0 4px 16px rgba(70,90,220,.28); }
+.bubble .ans-title { font-weight: 650; margin-bottom: 5px; }
+.bubble .ans-title .cat-chip { margin-left: 8px; font-size: 10.5px; padding: 1px 8px; vertical-align: 1px; }
+.bubble .ans-src { margin-top: 10px; font-size: 12px; color: var(--ink-3); }
+.bubble .ans-src a { color: #4a5fd6; cursor: pointer; text-decoration: none; border-bottom: 1px dashed rgba(68,89,200,.4); }
+.bubble .hits { margin-top: 12px; font-size: 12px; color: var(--ink-3); }
+.bubble .hits button { display: inline-block; margin: 3px 6px 0 0; padding: 4px 12px; border-radius: 20px; border: 1px solid var(--line-strong); background: rgba(255,255,255,.60); font-size: 12px; color: var(--ink-2); cursor: pointer; transition: all .15s ease; }
+.bubble .hits button:hover { color: #4458c9; border-color: rgba(80,110,240,.5); }
+.thinking { color: var(--ink-2); }
+.thinking::after { content: "···"; letter-spacing: 3px; animation: blink 1.2s infinite; color: #4a5fd6; }
+@keyframes blink { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+.ask-bar { display: flex; gap: 10px; padding: 18px 0 30px; border-top: 1px solid var(--line); margin-top: 4px; }
+.ask-bar input { flex: 1; padding: 12px 17px; border: 1px solid var(--line-strong); border-radius: 12px; font-size: 14px; background: #ffffff; color: var(--ink); outline: none; transition: all .16s ease; }
+.ask-bar input::placeholder { color: var(--ink-3); }
+.ask-bar input:focus { border-color: rgba(124,116,255,.6); box-shadow: 0 0 0 3px rgba(70,90,220,.16), var(--glow); }
+.modal-mask { position: fixed; inset: 0; background: rgba(22,30,48,.42); backdrop-filter: blur(6px); display: grid; place-items: center; z-index: 50; }
+.modal { width: min(660px, 92vw); background: var(--panel-solid); border: 1px solid var(--line-strong); border-radius: 16px; padding: 26px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 70px rgba(16,24,40,.22); animation: fadeUp .22s ease; }
+.modal h3 { font-size: 16.5px; font-weight: 700; }
+.modal input, .modal textarea, .modal select { width: 100%; border: 1px solid var(--line-strong); border-radius: 10px; padding: 10px 14px; font-size: 13.5px; font-family: inherit; outline: none; background: #ffffff; color: var(--ink); transition: all .16s ease; }
+.modal input::placeholder, .modal textarea::placeholder { color: var(--ink-3); }
+.modal select { cursor: pointer; }
+.pfield { display: flex; flex-direction: column; gap: 6px; }
+.pfield label { font-size: 12px; color: var(--ink-2); }
+.modal-sm { width: min(430px, 92vw); }
+.modal input:focus, .modal textarea:focus { border-color: rgba(124,116,255,.6); box-shadow: 0 0 0 3px rgba(70,90,220,.16); }
+.modal textarea { resize: vertical; line-height: 1.65; min-height: 240px; }
+.modal textarea.drag-over { border-color: rgba(124,116,255,.7); box-shadow: 0 0 0 3px rgba(70,90,220,.18); background: rgba(80,110,240,.06); }
+.file-hint { font-size: 11.5px; color: var(--ink-3); margin-top: -6px; }
+.joy-guide { border: 1px solid rgba(80,110,240,.40); background: var(--grad-soft); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 7px; }
+.jg-title { font-size: 13px; font-weight: 650; color: #3b4bc0; }
+.jg-steps { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; color: var(--ink-2); }
+.jg-steps i { font-style: normal; display: inline-grid; place-items: center; min-width: 17px; height: 17px; border-radius: 50%; background: var(--grad); color: #fff; font-size: 11px; margin-right: 7px; font-weight: 700; }
+.jg-steps kbd { background: rgba(0,0,0,.05); border: 1px solid var(--line-strong); border-bottom-width: 2px; border-radius: 5px; padding: 0 6px; font-size: 11.5px; font-family: inherit; color: var(--ink); }
+.jg-why { font-size: 11.5px; color: var(--ink-3); line-height: 1.7; }
+.paste-status { color: #2e9e63; }
+.paste-status.default { color: var(--ink-3); }
+.ver-badge { padding: 10px 8px 0; font-size: 10.5px; color: var(--ink-3); letter-spacing: .5px; }
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: 10px; overflow: hidden; width: fit-content; }
+.seg-item { padding: 7px 18px; background: none; border: none; font-size: 13px; color: var(--ink-2); cursor: pointer; transition: all .15s ease; }
+.seg-item.active { background: var(--grad); color: #fff; font-weight: 600; }
+.modal-foot { display: flex; justify-content: flex-end; gap: 10px; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: rgba(28,39,64,.14); border-radius: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+:root {
+}
+.toast { position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%) translateY(14px); background: var(--panel-solid); border: 1px solid var(--line-strong); color: var(--ink); padding: 10px 18px; border-radius: 10px; font-size: 13px; box-shadow: var(--glow); opacity: 0; pointer-events: none; transition: all .25s ease; z-index: 99; max-width: min(560px, 86vw); }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="bg-orbs"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<div class="bg-grid"></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">知</div>
+      <div>
+        <div class="brand-name">知识库</div>
+        <div class="brand-sub">KNOWLEDGE BASE</div>
+      </div>
+    </div>
+    <div>
+      <div class="nav-group-label">工作台</div>
+      <nav>
+        <button class="nav-item active" data-view="assets">
+          <span class="nav-ico">▤</span> 知识资产
+          <span class="nav-badge" id="badgeAssets">0</span>
+        </button>
+        <button class="nav-item" data-view="qa">
+          <span class="nav-ico">◈</span> 问答助手
+        </button>
+      </nav>
+    </div>
+    <div class="sidebar-foot" id="statLine">—</div>
+    <div class="side-actions">
+      <button class="btn small ghost" id="btnExport">导出备份</button>
+      <button class="btn small ghost" id="btnImport">导入备份</button>
+    </div>
+    <div class="ver-badge">v2.6 · 文件夹管理 · JoySpace 一键抓取</div>
+  </aside>
+
+  <main class="main">
+    <section id="view-assets" class="view">
+      <header class="view-head">
+        <div class="view-head-row">
+          <div>
+            <h1>知识资产</h1>
+            <div class="sub">集中管理规则类与信息类文档，支持文件夹归类、粘贴导入与检索</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn primary" id="btnPaste">＋ 粘贴文档</button>
+            <button class="btn" id="btnUpload">⬆ 上传文件</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="tabs" role="tablist">
+        <button class="tab active" data-cat="rule" role="tab">规则类 <span class="count" id="cntRule">0</span></button>
+        <button class="tab" data-cat="info" role="tab">信息类 <span class="count" id="cntInfo">0</span></button>
+      </div>
+
+      <div class="folder-bar" id="folderBar"></div>
+
+      <div class="split">
+        <div class="pane pane-list">
+          <div class="doc-list" id="docList"></div>
+        </div>
+        <div class="pane pane-detail">
+          <div class="detail-empty" id="detailEmpty">
+            <div class="de-ico">📄</div>
+            <div class="de-title">从左侧选择一篇文档</div>
+            <div class="de-sub">点左边的卡片，全文会在这里展开；左边的列表不会被挤走</div>
+          </div>
+          <article class="doc-view hidden" id="docView">
+            <button class="btn ghost" id="btnBack">← 返回列表</button>
+            <h2 id="docTitle"></h2>
+            <div class="doc-meta" id="docMeta"></div>
+            <div class="doc-toolbar hidden" id="docToolbar"></div>
+            <div class="embed-wrap hidden" id="embedWrap"></div>
+            <div class="doc-content" id="docContent"></div>
+            <button class="btn danger" id="btnDelete">删除这篇文档</button>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="view-qa" class="view hidden">
+      <header class="view-head">
+        <h1>问答助手</h1>
+        <div class="sub">基于你的知识库进行智能检索并给出答案</div>
+      </header>
+      <div class="chat" id="chat">
+        <div class="msg bot">
+          <div class="bubble">把文档粘到「知识资产」里，然后在这里提问，我会从你的知识库里找答案。试试问我「住宿费报销标准是多少？」</div>
+        </div>
+      </div>
+      <form class="ask-bar" id="askForm">
+        <input id="askInput" autocomplete="off" placeholder="输入你的问题，例如：报销流程是什么？" />
+        <button class="btn primary" type="submit">提问</button>
+      </form>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<input type="file" id="fileInput" multiple hidden accept=".txt,.md,.markdown,.csv,.json,.log,.yml,.yaml,.html,.xml" />
+<input type="file" id="importInput" hidden accept=".json" />
+<div class="modal-mask hidden" id="pasteModal">
+  <div class="modal">
+    <h3>粘贴新文档</h3>
+    <div class="link-row">
+      <input id="pLink" placeholder="粘贴 JoySpace 文档链接，如 https://joyspace.jd.com/pages/…" />
+      <button class="btn primary" id="pGrab" title="需已安装 joydoc-grabber 浏览器扩展：用你自己的登录态自动抓取正文">⚡ 一键抓取</button>
+      <button class="btn" id="pOpen">打开文档</button>
+    </div>
+    <div class="joy-guide hidden" id="joyGuide">
+      <div class="jg-title">📥 导入这篇文档的正文（两种方式，任选其一）</div>
+      <div class="jg-steps">
+        <span>⚡ <b>方式一（推荐）：装了 joydoc-grabber 扩展就点上面「⚡ 一键抓取」，全自动转 Markdown 入库，零复制粘贴</b></span>
+        <span><i>1</i>方式二：点「打开文档」，在新标签页打开 JoySpace 原文</span>
+        <span><i>2</i>在原文页面 <kbd>Ctrl+A</kbd> 全选 → <kbd>Ctrl+C</kbd> 复制</span>
+        <span><i>3</i>回到本窗口，在下方正文框 <kbd>Ctrl+V</kbd> → 自动转为 Markdown 排版</span>
+      </div>
+      <div class="jg-why">💡 为什么不能只发链接就全自动？JoySpace 需要京东登录态，普通网页无权跨域抓取（浏览器安全红线）；「一键抓取」通过浏览器扩展借用你自己浏览器的登录态完成，内容不经过任何第三方服务器。</div>
+    </div>
+    <input id="pTitle" placeholder="文档标题（粘贴正文后自动填写，可修改）" />
+    <div class="seg" id="pCatSeg">
+      <button class="seg-item active" data-cat="rule">规则类</button>
+      <button class="seg-item" data-cat="info">信息类</button>
+    </div>
+    <div class="pfield">
+      <label for="pFolder">所属文件夹</label>
+      <select id="pFolder"></select>
+    </div>
+    <textarea id="pContent" rows="10" placeholder="把 JoySpace 文档内容复制后按 Ctrl+V 粘贴到这里（带格式自动拆解为 Markdown）
+也可以直接输入文字，或把 .txt / .md 文件拖进来"></textarea>
+    <div class="file-hint paste-status default" id="pasteStatus">🔗 填链接按引导导入正文 · 或直接粘贴文字 · 支持 .txt / .md 等文件拖入</div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="pCancel">取消</button>
+      <button class="btn primary" id="pSave">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask hidden" id="folderModal">
+  <div class="modal modal-sm">
+    <h3 id="fmTitle">新建文件夹</h3>
+    <input id="fmName" maxlength="24" placeholder="文件夹名称，如：新人入职规则 / 考勤制度" />
+    <div class="modal-foot">
+      <button class="btn ghost" id="fmCancel">取消</button>
+      <button class="btn primary" id="fmSave">创建</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/*==LOGIC-START==*/
+// ---------- 纯逻辑：存储 + 检索（无 DOM，可单测） ----------
+const LS_KEY = 'kqa_docs_v1';
+const STOPWORDS = new Set([
+  '的','了','吗','呢','啊','是','在','我','有','和','就','不','都','一','你','很','也','这','那','与','及','或',
+  'what','is','the','a','an','of','to','and','how','do','i',
+]);
+function tokenize(text) {
+  const parts = String(text || '').toLowerCase()
+    .split(/[\s,，。；;：:？?！!、\[\]()（）"'「」《》]+/)
+    .filter((t) => t && !STOPWORDS.has(t));
+  const tokens = new Set();
+  for (const p of parts) {
+    if (p.length <= 3) { tokens.add(p); continue; }
+    for (let n = 2; n <= 3; n++)
+      for (let i = 0; i + n <= p.length; i++) tokens.add(p.slice(i, i + n));
+    tokens.add(p);
+  }
+  return [...tokens];
+}
+function scoreDoc(doc, tokens) {
+  const title = (doc.title || '').toLowerCase();
+  const content = (doc.content || '').toLowerCase();
+  let score = 0; const matched = [];
+  for (const t of tokens) {
+    if (title.includes(t)) { score += 10; matched.push(t); }
+    else if (content.includes(t)) { score += 2; matched.push(t); }
+  }
+  return { score, matched: [...new Set(matched)] };
+}
+function findAnswer(docs, question) {
+  const tokens = tokenize(question);
+  if (!tokens.length) return { answer: null, hits: [] };
+  const hits = docs
+    .map((d) => ({ doc: d, ...scoreDoc(d, tokens) }))
+    .filter((h) => h.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+  if (!hits.length) return { answer: null, hits: [] };
+  const best = hits[0];
+  const paras = (best.doc.content || '').split(/\n+/).filter(Boolean);
+  let keyPara = paras[0] || '', bestScore = -1;
+  for (const p of paras) {
+    const lp = p.toLowerCase();
+    const s = tokens.reduce((acc, t) => acc + (lp.includes(t) ? t.length : 0), 0);
+    if (s > bestScore) { bestScore = s; keyPara = p; }
+  }
+  return {
+    answer: {
+      title: best.doc.title, category: best.doc.category, docId: best.doc.id,
+      url: best.doc.url || null,
+      snippet: keyPara.slice(0, 300), matched: best.matched,
+    },
+    hits: hits.map((h) => ({ id: h.doc.id, title: h.doc.title, category: h.doc.category, score: h.score })),
+  };
+}
+function newId() { return 'd' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+// ---------- 轻量 Markdown 渲染（纯函数，用于排版导入的正文） ----------
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function inlineMd(s) {
+  return s
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/!\[([^\]]*)\]\((https?:[^)\s]+)\)/g, '<img src="$2" alt="$1" loading="lazy">')
+    .replace(/\*{4,}/g, '')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+    .replace(/\[([^\]]+)\]\((https?:[^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+}
+function mdToHtml(src) {
+  const lines = escHtml(String(src || '').replace(/\r\n?/g, '\n')).split('\n');
+  const out = [];
+  let para = [], list = null, listItems = [], code = null, table = null;
+  const flushPara = () => { if (para.length) { out.push('<p>' + para.map(inlineMd).join('<br>') + '</p>'); para = []; } };
+  const flushList = () => { if (list) { out.push('<' + list + '>' + listItems.map((i) => '<li>' + inlineMd(i) + '</li>').join('') + '</' + list + '>'); list = null; listItems = []; } };
+  const flushTable = () => {
+    if (!table) return;
+    const head = table.header.map((c) => '<th>' + inlineMd(c) + '</th>').join('');
+    const body = table.rows.map((r) => '<tr>' + r.map((c) => '<td>' + inlineMd(c) + '</td>').join('') + '</tr>').join('');
+    out.push('<table><thead><tr>' + head + '</tr></thead><tbody>' + body + '</tbody></table>');
+    table = null;
+  };
+  const flushAll = () => { flushPara(); flushList(); flushTable(); };
+  for (const line of lines) {
+    if (code !== null) {
+      if (/^\s*```/.test(line)) { out.push('<pre class="code"><code>' + code.join('\n') + '</code></pre>'); code = null; }
+      else code.push(line);
+      continue;
+    }
+    if (/^\s*```/.test(line)) { flushAll(); code = []; continue; }
+    if (!line.trim()) { flushAll(); continue; }
+    const h = line.match(/^(#{1,4})\s+(.*)$/);
+    if (h) { flushAll(); const n = h[1].length; out.push('<h' + n + '>' + inlineMd(h[2]) + '</h' + n + '>'); continue; }
+    if (/^\s*(-{3,}|\*{3,})\s*$/.test(line)) { flushAll(); out.push('<hr>'); continue; }
+    const q = line.match(/^&gt;\s?(.*)$/);
+    if (q) { flushAll(); out.push('<blockquote>' + inlineMd(q[1]) + '</blockquote>'); continue; }
+    const tRow = line.match(/^\s*\|(.+)\|\s*$/);
+    if (tRow) {
+      flushPara(); flushList();
+      const cells = tRow[1].split('|').map((c) => c.trim());
+      if (!table) table = { header: cells, rows: [], pending: true };
+      else if (table.pending && /^[\s:|-]+$/.test(tRow[1])) table.pending = false;
+      else table.rows.push(cells);
+      continue;
+    }
+    const ul = line.match(/^\s*[-*•]\s+(.*)$/);
+    if (ul) { flushPara(); if (list === 'ol') flushList(); flushTable(); list = 'ul'; listItems.push(ul[1]); continue; }
+    const ol = line.match(/^\s*\d+[.、)]\s+(.*)$/);
+    if (ol) { flushPara(); if (list === 'ul') flushList(); flushTable(); list = 'ol'; listItems.push(ol[1]); continue; }
+    if (list) flushList();
+    if (table) flushTable();
+    para.push(line);
+  }
+  if (code !== null) out.push('<pre class="code"><code>' + code.join('\n') + '</code></pre>');
+  flushAll();
+  return out.join('\n');
+}
+// 抓取正文清洗：剔除 JoySpace 编辑器工具栏混入正文的噪声行（插入/页宽/字体/字号数字等）
+const GRAB_NOISE_WORDS = '插入|页宽|字体|正文|标题|添加封面|封面|目录|大纲|评论|分享|协作|历史|版本历史|模板|表格|图片|附件|代码|代码块|引用|分割线|页眉|页脚|页码|水印|缩进|对齐|行距|段间距|字号|加粗|斜体|下划线|删除线|高亮|字体颜色|背景色|编号|项目符号|待办|便签|公式|流程图|思维导图|画板|脑图|导出|打印|全屏|撤销|重做|格式刷|清除格式|上标|下标|脚注|锚点|超链接|智能助手|AI助手|翻译|摘要|校对|润色|字数统计|侧边栏|收起|展开|更多';
+const GRAB_NOISE_RE = new RegExp('^(?:' + GRAB_NOISE_WORDS + ')(?:[、，,\\s]*(?:' + GRAB_NOISE_WORDS + '))*$');
+function cleanGrabMarkdown(md) {
+  const lines = String(md || '').replace(/\r\n?/g, '\n').split('\n');
+  const kind = (l) => { const s = l.trim(); if (!s) return 'blank'; if (GRAB_NOISE_RE.test(s) || /^\d{1,3}$/.test(s)) return 'noise'; return 'keep'; };
+  let i = 0;
+  while (i < lines.length && kind(lines[i]) !== 'keep') i++;
+  return lines.slice(i).join('\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+/*==IM-START==*/
+// ---------- JoySpace 智能导入：链接识别 + 富文本(HTML)→Markdown（纯函数，可单测） ----------
+const SINGLE_URL_RE = /^https?:\/\/\S+$/i;
+const JOY_LINK_RE = /https?:\/\/joyspace\.jd\.com\/[^\s'"<>()（）【】《》「」,，;；]+/i;
+const MD_BLOCK_RE = /^(P|DIV|H[1-6]|UL|OL|LI|TABLE|THEAD|TBODY|TFOOT|TR|BLOCKQUOTE|PRE|SECTION|ARTICLE|HEADER|FOOTER|MAIN|FIGURE|HR|DL|DT|DD|ASIDE|NAV)$/;
+function htmlToMarkdown(html) {
+  let doc;
+  try { doc = new DOMParser().parseFromString(String(html || ''), 'text/html'); } catch (e) { return ''; }
+  if (!doc || !doc.body) return '';
+  doc.querySelectorAll('script,style,noscript,meta,link,template').forEach((n) => n.remove());
+  return blocksToMd(doc.body).replace(/\n{3,}/g, '\n\n').trim();
+}
+function nodeToMd(n) {
+  if (n.nodeType === 3) return String(n.nodeValue || '').replace(/\s+/g, ' ');
+  if (n.nodeType !== 1) return '';
+  const inner = () => Array.from(n.childNodes).map(nodeToMd).join('');
+  switch (n.tagName) {
+    case 'BR': return '\n';
+    case 'STRONG': case 'B': { const t = inner().trim(); return t ? '**' + t + '**' : ''; }
+    case 'EM': case 'I': { const t = inner().trim(); return t ? '*' + t + '*' : ''; }
+    case 'S': case 'DEL': case 'STRIKE': { const t = inner().trim(); return t ? '~~' + t + '~~' : ''; }
+    case 'U': case 'SPAN': case 'FONT': case 'LABEL': case 'MARK': case 'SUP': case 'SUB': case 'SMALL': return inner();
+    case 'CODE': return '`' + (n.textContent || '').trim() + '`';
+    case 'A': { const t = inner().trim(); const href = n.getAttribute('href') || ''; return href ? '[' + (t || href) + '](' + href + ')' : t; }
+    case 'IMG': { const alt = n.getAttribute('alt') || '图片'; const src = n.getAttribute('src') || ''; return src ? '![' + alt + '](' + src + ')' : ''; }
+    default: return MD_BLOCK_RE.test(n.tagName) ? '\n' + blocksToMd(n) : inner();
+  }
+}
+function blocksToMd(root) {
+  if (!root) return '';
+  return Array.from(root.childNodes).map(blockToMd).join('');
+}
+function inlineOf(n) {
+  return Array.from(n.childNodes).map(nodeToMd).join('').replace(/[ \t]+/g, ' ').trim();
+}
+function blockToMd(n) {
+  if (n.nodeType === 3) { const t = String(n.nodeValue || '').trim(); return t ? t + '\n\n' : ''; }
+  if (n.nodeType !== 1) return '';
+  switch (n.tagName) {
+    case 'H1': return '# ' + inlineOf(n) + '\n\n';
+    case 'H2': return '## ' + inlineOf(n) + '\n\n';
+    case 'H3': return '### ' + inlineOf(n) + '\n\n';
+    case 'H4': case 'H5': case 'H6': return '#### ' + inlineOf(n) + '\n\n';
+    case 'P': { const t = inlineOf(n); return t ? t + '\n\n' : ''; }
+    case 'UL': return listToMd(n, false, 0) + '\n';
+    case 'OL': return listToMd(n, true, 0) + '\n';
+    case 'LI': { const t = inlineOf(n); return t ? '- ' + t + '\n' : ''; }
+    case 'BLOCKQUOTE': { const t = blocksToMd(n).trim(); return t ? t.split('\n').map((l) => '> ' + l).join('\n') + '\n\n' : ''; }
+    case 'PRE': { const code = (n.textContent || '').replace(/\n+$/, ''); return code.trim() ? '```\n' + code + '\n```\n\n' : ''; }
+    case 'TABLE': return tableToMd(n) + '\n';
+    case 'HR': return '---\n\n';
+    case 'BR': return '\n';
+    default: {
+      // 只含内联子节点的容器（div/span 包裹的行内文本+加粗等）按内联聚合，避免拆成多行
+      const kids = Array.from(n.childNodes);
+      const hasBlock = kids.some((c) => c.nodeType === 1 && MD_BLOCK_RE.test(c.tagName));
+      const t = hasBlock ? blocksToMd(n).trim() : inlineOf(n);
+      return t ? t + '\n\n' : '';
+    }
+  }
+}
+function listToMd(listEl, ordered, level) {
+  let idx = 1; let out = '';
+  Array.from(listEl.children).forEach((li) => {
+    if (li.tagName !== 'LI') return;
+    let txt = ''; const nested = [];
+    Array.from(li.childNodes).forEach((ch) => {
+      if (ch.nodeType === 1 && (ch.tagName === 'UL' || ch.tagName === 'OL')) nested.push(ch);
+      else txt += nodeToMd(ch);
+    });
+    out += '  '.repeat(level) + (ordered ? idx + '. ' : '- ') + txt.replace(/\s+/g, ' ').trim() + '\n';
+    nested.forEach((sub) => { out += listToMd(sub, sub.tagName === 'OL', level + 1); });
+    idx++;
+  });
+  return out;
+}
+function tableToMd(table) {
+  const trs = Array.from(table.querySelectorAll('tr'));
+  if (!trs.length) return '';
+  const rows = trs.map((tr) => Array.from(tr.children).map((c) => String(c.textContent || '').replace(/\s+/g, ' ').trim().replace(/\|/g, '\\|')));
+  const cols = Math.max.apply(null, rows.map((r) => r.length));
+  rows.forEach((r) => { while (r.length < cols) r.push(''); });
+  const line = (r) => '| ' + r.map((c) => c || ' ').join(' | ') + ' |';
+  let out = line(rows[0]) + '\n' + '|' + Array(cols).fill(' --- ').join('|') + '|\n';
+  for (let i = 1; i < rows.length; i++) out += line(rows[i]) + '\n';
+  return out.trim();
+}
+function extractTitleFromMd(md) {
+  for (const l of String(md || '').split('\n')) {
+    const t = l.trim();
+    if (!t) continue;
+    const h = t.match(/^#{1,6}\s+(.*)$/);
+    let raw = h ? h[1] : t;
+    if (raw.startsWith('|')) raw = raw.replace(/\|/g, ' ');
+    const clean = raw.replace(/\*\*|\*|~~|`/g, '').replace(/\[([^\]]*)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim();
+    if (clean) return clean.slice(0, 60);
+  }
+  return '';
+}
+function processPaste(html, text) {
+  const plain = String(text || '').trim();
+  if (plain && SINGLE_URL_RE.test(plain)) return { mode: 'link', url: plain, title: '' };
+  if (html && /<[a-z!][\s\S]*>/i.test(html)) {
+    const md = htmlToMarkdown(html);
+    if (md && md.replace(/\s/g, '').length >= 10) return { mode: 'md', md: md, title: extractTitleFromMd(md) };
+  }
+  return { mode: 'text', md: text || '', title: '' };
+}
+/*==IM-END==*/
+function seedDocs() {
+  const now = new Date().toISOString();
+  return [
+    { id: 'dshuziren01', title: "数字人知识库总索引", category: 'rule', updatedAt: now, url: "https://joyspace.jd.com/pages/jOqXybDsekw4Z2G9tNu3", content: "# 数字人知识库总索引\n\n**一、知识库说明**\n\n《PMO智能待办知识库》是**机器人执行工作的总纲**，回答的是\"机器人是谁、能做什么、怎么判断、按什么规则回应、有什么边界\"。当前已整理好的场景表、催办机制、搭建SOP等内容，作为子文档挂在总纲下，由总纲统一引用。因此总纲自身要写成**可执行规则**。**适用对象**包括机器人自身与 PMO 七组成员，文档由 PMO 七组维护，版本随规则调整同步更新。各部分的具体细则、话术模板与操作流程以子文档形式挂载，本总纲只定义规则与判定口径，不重复展开操作细节，子文档索引见各部分文档链接。\n\n## 二、机器人角色与能力边界\n\n身份定位（不知疲倦的数字员工）、能做（捕获/催办/状态回写/查询）、不能做（不审批延期、不改他人待办、不臆测意图）。\n\n**机器人在执行中必须遵守三条边界：**\n\n1. 不代替人工做审批决定；\n2. 不修改非本人提交的待办数据；\n3. 不臆测用户模糊回复的真实意图，遇到超出能力范围的情形一律记录并转交 PMO 处理。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n|  | 场景、愿景 |  |\n\n## 三、核心工作流程\n\n定时捕获信息/人工补充待办 → 定时催办 → 用户回复 → 状态流转 → 进度报告，六步串成主线。\n\n机器人的全部工作围绕**一条主线**运转：\n\n一方面机器人从会议纪要、群聊与录音中自动捕获待办事项，抽取为文档，人工审核后上传待办表，按既定节奏定时发起催办；\n\n另一方面，高层重点待办表人工维护后，机器人跟进待办文档。\n\n这条主线是判断机器人行为是否合规的基础，任何一次催办、回写或查询都应能对应到主线中的具体环节，超出主线范围的动作需要额外授权。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n| 待补充 | 待补充 | 从会议纪要、群聊与录音中自动捕获待办事项，抽取为结构化待办卡片 |\n|  |  |  |\n\n## 四、催办与升级规则\n\n催办节奏（温和提示→提醒→升级→PMO介入）、触发条件、话术基调、逾期判定口径。\n\n催办遵循由温和到正式、由机器到人工的递进逻辑，初始以提示性语气提醒，未响应则逐步提高提醒频次与正式程度，持续逾期后升级至 PMO 人工介入，确保待办不因无人响应而静默失效。催办的触发条件、节奏间隔与逾期判定口径需保持全库统一，避免同一待办被重复催办或长期漏催。话术基调以协作和提醒为主，避免命令式表达，具体措辞模板由子文档承载。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n|  | 规则机制 |  |\n|  |  |  |\n|  |  |  |\n\n## 五、用户问答场景及回复示例\n\n用户对催办消息的回复是机器人价值实现的关键环节，需按回复意图分类应对，主要包括状态更新类（已完成、进行中、有阻碍、申请延期）、否认纠偏类（责任人错误、待办信息有误）、追问类（待办内容与来源、本人未完成事项、他人进展）以及组织视角类（部门完成情况与逾期排行），同时必须覆盖越界与兜底类情形，即用户要求修改他人待办或回复无法识别时，机器人应明确说明权限边界或给出快捷选项引导，不得自行推测。每一类场景的回应思路与对应权限以场景表子文档为准，本总纲仅作分类框架。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n|  | 问答场景 |  |\n|  | 评测用例 |  |\n|  |  |  |\n\n## 六、权限与数据口径\n\n权限实行两档管理：\n\n- **第一档**为待办责任人本人，仅可查询与操作本人负责的待办；\n- **第二档**为 PMO 七组成员，可查询高层关注事项与组织级统计数据，具体成员名单在附录统一列示，不在各场景中重复标注。\n\n数据口径方面需统一\"提出人\"\"截止时间\"\"状态\"等核心字段的定义与取值规则，明确以待办表为唯一数据源，多处来源冲突时按既定优先级取值，确保机器人在不同场景下给出的结论一致可追溯。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n|  | 权限管理 |  |\n|  |  |  |\n\n## 七、机器人跟进待办信息（保密，勿外传）\n\n该部分作为机器人推进待办的核心数据源，主要是各类高层待办信息，以及重点会议纪要，机器人根据该部分重点待办进行跟进。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n|  | 本地生活产研周会 |  |\n|  | 和Ada的双周会 |  |\n\n## 八、其他重点信息（保密，勿外传）\n\n该部分主要为一些其他关键信息，包含重点会议纪要、机器人每天定时巡回群消息生成的日报等。\n\n| **维护人** | **分类** | **相关文档链接** |\n| --- | --- | --- |\n|  |  |  |\n|  |  |  |\n" },
+    { id: newId(), title: '差旅报销规则', category: 'rule', updatedAt: now,
+      content: '差旅报销规则：\n1. 交通费凭发票实报实销，高铁二等座标准。\n2. 住宿费一线城市每晚不超过 600 元。\n3. 报销需在行程结束后 15 个工作日内提交 OA 流程，附发票与审批单。' },
+    { id: newId(), title: '团队例会安排', category: 'info', updatedAt: now,
+      content: '团队例会安排：每周一上午 10:00 在 A 座 3 楼会议室召开周会，同步上周进展与本周计划；每月最后一个周五下午进行月度复盘。' },
+  ];
+}
+/*==LOGIC-END==*/
+
+// ---------- 存储层（localStorage，带内存兜底） ----------
+let memDocs = null;
+function loadAll() {
+  let docs = null;
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) docs = JSON.parse(raw);
+    if (!Array.isArray(docs)) docs = null;
+  } catch (e) { console.warn('localStorage 不可用，使用内存存储', e); docs = null; }
+  if (!docs) {
+    if (memDocs) return memDocs;
+    docs = seedDocs();
+    memDocs = docs;
+  }
+  // v2.6 迁移：老数据没有 folderId 字段 → 默认「未分类」
+  docs.forEach((d) => { if (!d.folderId) d.folderId = null; });
+  return docs;
+}
+function saveAll(docs) {
+  memDocs = docs;
+  try { localStorage.setItem(LS_KEY, JSON.stringify(docs)); } catch (e) { /* 内存兜底 */ }
+}
+
+// ---------- 状态与工具 ----------
+const $ = (sel) => document.querySelector(sel);
+const state = { view: 'assets', category: 'rule', folderId: null, docs: [], currentDocId: null, pasteCat: 'rule' };
+function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+function fmtTime(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// ---------- 视图切换 ----------
+document.querySelectorAll('.nav-item').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.view = btn.dataset.view;
+    $('#view-assets').classList.toggle('hidden', state.view !== 'assets');
+    $('#view-qa').classList.toggle('hidden', state.view !== 'qa');
+  });
+});
+
+// ---------- 知识资产 ----------
+document.querySelectorAll('.tab').forEach((tab) => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+    state.category = tab.dataset.cat;
+    state.folderId = null; // 切分类后回到「全部」
+    showList(); loadDocs();
+  });
+});
+
+function loadDocs() {
+  const all = loadAll();
+  const rule = all.filter((d) => d.category === 'rule').length;
+  $('#cntRule').textContent = rule;
+  $('#cntInfo').textContent = all.length - rule;
+  $('#badgeAssets').textContent = all.length;
+  $('#statLine').innerHTML = `共 <b>${all.length}</b> 篇 · 规则 <b>${rule}</b> / 信息 <b>${all.length - rule}</b>`;
+  state.docs = all.filter((d) => d.category === state.category);
+  renderFolderBar();
+  renderList();
+}
+
+function showList() {
+  $('#docView').classList.add('hidden');
+  $('#detailEmpty').classList.remove('hidden');
+  state.currentDocId = null;
+  document.body.classList.remove('detail-open');
+  renderList();
+}
+
+// 卡片摘要：去掉 Markdown 符号（图片缩略为🖼、去加粗星号井号）
+function snippetOf(md) {
+  return String(md || '').replace(/!\[[^\]]*\]\([^)]*\)/g, '🖼').replace(/\*\*([^*]+)\*\*/g, '$1').replace(/[*#>`]/g, '').replace(/\s+/g, ' ').trim().slice(0, 90);
+}
+function renderList() {
+  const list = $('#docList');
+  const docs = state.folderId ? state.docs.filter((d) => d.folderId === state.folderId) : state.docs;
+  if (!docs.length) {
+    const msg = state.folderId
+      ? '这个文件夹还没有文档<br>点右上角「＋ 粘贴文档」添加（保存时选这个文件夹）<br>或在已有文档详情页点「📁 移动到文件夹」移进来'
+      : '这个分类还没有文档<br>点右上角「＋ 粘贴文档」或「⬆ 上传文件」添加';
+    list.innerHTML = `<div class="empty"><div class="ico">${state.folderId ? '📂' : '🗂️'}</div>${msg}</div>`;
+    return;
+  }
+  const catName = state.category === 'rule' ? '规则类' : '信息类';
+  list.innerHTML = docs.map((d) => {
+    const linkOnly = d.url && !(d.content || '').trim();
+    const active = d.id === state.currentDocId ? ' active' : '';
+    const fname = d.folderId ? (folderName(d.folderId) || '未分类') : null;
+    return `
+    <div class="doc-card${active}" data-id="${d.id}">
+      <span class="cat-chip">${catName}</span>${fname ? `<span class="folder-tag">📁 ${escHtml(fname)}</span>` : ''}
+      <h3>${d.url ? '🔗 ' : ''}${esc(d.title)}</h3>
+      <p>${linkOnly ? '<span class="link-tag">🔗 JoySpace 链接文档 · 点开直达原文</span>' : esc(snippetOf(d.content || ''))}</p>
+      <div class="meta">◔ 更新于 ${fmtTime(d.updatedAt)}</div>
+    </div>`;
+  }).join('');
+  list.querySelectorAll('.doc-card').forEach((card) =>
+    card.addEventListener('click', () => openDoc(card.dataset.id)));
+}
+
+function openDoc(id) {
+  const doc = loadAll().find((d) => d.id === id);
+  if (!doc) return;
+  state.currentDocId = id;
+  $('#docTitle').textContent = (doc.url ? '🔗 ' : '') + doc.title;
+  const fName = doc.folderId ? folderName(doc.folderId) : null;
+  $('#docMeta').textContent = `${doc.category === 'rule' ? '规则类' : '信息类'} · ${fName ? '📁 ' + fName : '📂 未分类'} · 更新于 ${fmtTime(doc.updatedAt)}`;
+  // 工具条：链接文档带原文按钮；所有文档都带「移动到文件夹」
+  const bar = $('#docToolbar'), embed = $('#embedWrap');
+  embed.classList.add('hidden'); embed.innerHTML = '';
+  bar.classList.remove('hidden');
+  bar.innerHTML = (doc.url ? `<a class="btn primary" href="${escHtml(doc.url)}" target="_blank" rel="noopener">🔗 打开原文（JoySpace 完整格式）</a>
+      <button class="btn" id="btnEmbed">⛶ 应用内预览原文</button>
+      <span class="tip">登录 JoySpace 请在新标签页完成；内嵌窗口里登录会被浏览器拦截</span>` : '') + `
+      <span class="move-wrap"><button class="btn" id="btnMove">📁 移动到文件夹</button><div class="move-menu hidden" id="moveMenu"></div></span>`;
+  if (doc.url) bar.querySelector('#btnEmbed').addEventListener('click', () => {
+      const willOpen = embed.classList.contains('hidden');
+      embed.classList.toggle('hidden', !willOpen);
+      bar.querySelector('#btnEmbed').textContent = willOpen ? '收起内嵌预览' : '⛶ 应用内预览原文';
+      if (!willOpen) { embed.innerHTML = ''; return; }
+      // 两段式：先提示、不直接加载 iframe，避免用户在内嵌窗口里登录触发「公网→本地」拦截
+      embed.innerHTML = `<div class="embed-warn">
+        <div class="warn-title">⚠️ 加载前请先看一眼</div>
+        <p>浏览器会拦截「公网页面访问内网/本地登录服务」。JoySpace 的扫码 / ERP 登录如果在这个内嵌窗口里操作，点「京东员工登录」时会报：<br><code>此连接已被阻止，因为它是公共页面发起的，旨在连接到您本地网络上的设备或服务器</code></p>
+        <p><b>正确姿势：</b>点下面「在新标签页打开原文」，在<b>独立标签页</b>里完成登录查看 —— 那条路径不走公网隧道，不会被拦。本窗口只适合登录后的快速浏览。</p>
+        <div class="embed-warn-actions">
+          <a class="btn primary" href="${escHtml(doc.url)}" target="_blank" rel="noopener">在新标签页打开原文（推荐）</a>
+          <button class="btn" id="btnForceEmbed">仍要尝试内嵌预览</button>
+        </div>
+      </div>`;
+      embed.querySelector('#btnForceEmbed').addEventListener('click', () => {
+        embed.innerHTML = `<iframe src="${escHtml(doc.url)}" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="embed-tip">若内嵌窗口显示「连接已被阻止」/ 登录页 / 空白，都是浏览器安全限制，应用无法绕过 —— 请用工具条「打开原文」在新标签页查看。</div>`;
+      });
+    });
+  // 「移动到文件夹」下拉菜单
+  const moveMenu = bar.querySelector('#moveMenu');
+  bar.querySelector('#btnMove').addEventListener('click', (e) => {
+    e.stopPropagation();
+    const folders = foldersOf(doc.category);
+    moveMenu.innerHTML = `<button class="move-item${!doc.folderId ? ' cur' : ''}" data-fid="">📂 未分类</button>` +
+      folders.map((f) => `<button class="move-item${doc.folderId === f.id ? ' cur' : ''}" data-fid="${f.id}">📁 ${escHtml(f.name)}</button>`).join('');
+    moveMenu.classList.toggle('hidden');
+  });
+  moveMenu.addEventListener('click', (e) => {
+    const it = e.target.closest('.move-item');
+    if (!it) return;
+    e.stopPropagation();
+    const fid = it.dataset.fid || null;
+    if (fid !== (doc.folderId || null)) {
+      doc.folderId = fid;
+      const docs = loadAll();
+      const i = docs.findIndex((x) => x.id === doc.id);
+      if (i > -1) { docs[i] = doc; saveAll(docs); }
+      showToast(fid ? `已移动到「${folderName(fid)}」` : '已移到「未分类」');
+      loadDocs();
+      openDoc(doc.id);
+    }
+    moveMenu.classList.add('hidden');
+  });
+  // 正文区：有正文用 Markdown 排版；纯链接文档给引导提示
+  const dc = $('#docContent');
+  if ((doc.content || '').trim()) {
+    dc.className = 'doc-content md';
+    dc.innerHTML = mdToHtml(doc.content);
+  } else if (doc.url) {
+    dc.className = 'doc-content';
+    dc.innerHTML = `<div class="link-note">📌 <b>这是链接文档</b>，应用内还没有正文，所以问答暂时搜不到它的内容。<br>
+      点上方「打开原文」可查看带完整格式的 JoySpace 文档。<br>
+      想让它在应用内可读、可问答：把链接发给助手，由助手读取正文生成备份，再用左下角「导入备份」合入。</div>`;
+  } else {
+    dc.className = 'doc-content';
+    dc.textContent = '（无内容）';
+  }
+  $('#detailEmpty').classList.add('hidden');
+  $('#docView').classList.remove('hidden');
+  document.body.classList.add('detail-open');
+  document.querySelectorAll('.doc-card').forEach((c) => c.classList.toggle('active', c.dataset.id === id));
+}
+$('#btnBack').addEventListener('click', showList);
+$('#btnDelete').addEventListener('click', () => {
+  if (!state.currentDocId || !confirm('确定删除这篇文档？')) return;
+  saveAll(loadAll().filter((d) => d.id !== state.currentDocId));
+  showList(); loadDocs();
+});
+
+// ---------- 粘贴 / 上传 ----------
+function updatePasteStatus(msg, isDefault) {
+  const el = $('#pasteStatus');
+  el.textContent = msg || '🔗 填链接按引导导入正文 · 或直接粘贴文字 · 支持 .txt / .md 等文件拖入';
+  el.classList.toggle('default', !!isDefault || !msg);
+}
+function showLinkGuide(show) {
+  $('#joyGuide').classList.toggle('hidden', show === false);
+}
+$('#btnPaste').addEventListener('click', () => {
+  $('#pTitle').value = ''; $('#pContent').value = ''; $('#pLink').value = '';
+  setPasteCat(state.category);
+  showLinkGuide(false);
+  updatePasteStatus('', true);
+  $('#pasteModal').classList.remove('hidden');
+  $('#pLink').focus();
+});
+$('#pCancel').addEventListener('click', () => $('#pasteModal').classList.add('hidden'));
+$('#pasteModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) $('#pasteModal').classList.add('hidden');
+});
+function setPasteCat(cat) {
+  state.pasteCat = cat;
+  document.querySelectorAll('.seg-item').forEach((s) => s.classList.toggle('active', s.dataset.cat === cat));
+  fillFolderSelect();
+}
+function fillFolderSelect() {
+  const sel = $('#pFolder');
+  if (!sel) return;
+  const folders = foldersOf(state.pasteCat);
+  const cur = state.pasteCat === state.category ? state.folderId : null;
+  sel.innerHTML = `<option value="">📂 未分类</option>` +
+    folders.map((f) => `<option value="${f.id}"${f.id === cur ? ' selected' : ''}>📁 ${escHtml(f.name)}</option>`).join('');
+}
+document.querySelectorAll('.seg-item').forEach((s) =>
+  s.addEventListener('click', () => setPasteCat(s.dataset.cat)));
+function saveDoc(doc) {
+  const docs = loadAll();
+  docs.unshift(doc);
+  saveAll(docs);
+  $('#pasteModal').classList.add('hidden');
+  state.category = state.pasteCat;
+  state.folderId = doc.folderId || null; // 保存后跳到文档所在文件夹，确保立即可见
+  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.cat === state.category));
+  showList(); loadDocs();
+}
+// 链接输入框：填入/粘贴 JoySpace 链接即显示导入引导
+$('#pLink').addEventListener('input', () => {
+  const v = $('#pLink').value.trim();
+  if (SINGLE_URL_RE.test(v)) {
+    showLinkGuide(true);
+    updatePasteStatus('✅ 链接已就绪：按上面三步把正文带进来，正文框粘贴后自动排版');
+  }
+});
+$('#pOpen').addEventListener('click', () => {
+  const v = $('#pLink').value.trim();
+  if (!SINGLE_URL_RE.test(v)) return alert('请先粘贴有效的文档链接');
+  window.open(v, '_blank', 'noopener');
+});
+// ---------- v2.4：扩展联动「一键抓取」 ----------
+let toastTimer = null;
+function showToast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3600);
+}
+let grabBusy = false;
+function extCall(type, url, expect, timeoutMs) {
+  return new Promise((resolve) => {
+    let done = false;
+    const onMsg = (e) => {
+      const d = e && e.data;
+      if (d && d.source === 'kqa-ext' && d.type === expect) {
+        done = true; window.removeEventListener('message', onMsg); resolve(d);
+      }
+    };
+    window.addEventListener('message', onMsg);
+    window.postMessage({ source: 'kqa-page', type, url }, '*');
+    setTimeout(() => { if (!done) { window.removeEventListener('message', onMsg); resolve(null); } }, timeoutMs);
+  });
+}
+$('#pGrab').addEventListener('click', async () => {
+  if (grabBusy) return;
+  const v = $('#pLink').value.trim();
+  if (!SINGLE_URL_RE.test(v)) return alert('请先粘贴 JoySpace 文档链接');
+  if (!/joyspace\.jd\.com/i.test(v)) return alert('一键抓取目前仅支持 JoySpace 文档链接');
+  grabBusy = true;
+  const btn = $('#pGrab'); const old = btn.textContent;
+  btn.textContent = '⏳ 抓取中…'; btn.disabled = true;
+  updatePasteStatus('正在通过扩展打开 JoySpace 抓取正文（用你本浏览器的登录态，内容不经过第三方）…');
+  try {
+    const pong = await extCall('KQA_PING', '', 'KQA_PONG', 800);
+    if (!pong) {
+      updatePasteStatus('❌ 未检测到抓取扩展：请先安装（产出物面板 joydoc-grabber 压缩包，内附安装说明），或用下方三步引导手动导入');
+      return;
+    }
+    const resp = await extCall('KQA_GRAB', v, 'KQA_GRAB_RESULT', 45000);
+    const p = resp && resp.payload;
+    if (p && p.ok) {
+      const title = ($('#pTitle').value.trim() || p.title || 'JoySpace 文档').slice(0, 80);
+      const nid = newId();
+      saveDoc({ id: nid, title, category: state.pasteCat, folderId: ($('#pFolder') && $('#pFolder').value) || null, updatedAt: new Date().toISOString(), url: v, content: cleanGrabMarkdown(p.markdown) });
+      updatePasteStatus('', true);
+      showToast('✅ 已导入《' + title + '》：已在右侧展开');
+      openDoc(nid);
+    } else if (p && p.code === 'NEED_LOGIN') {
+      updatePasteStatus('🔐 JoySpace 未登录：点上方「打开文档」在新标签页登录一次，回来再点「一键抓取」即可');
+    } else if (p && (p.code === 'TIMEOUT' || p.code === 'EMPTY')) {
+      updatePasteStatus('⚠️ 自动抓取' + (p.code === 'TIMEOUT' ? '超时' : '未取到正文') + '：大文档可稍后重试，或用下方三步引导手动导入');
+    } else {
+      updatePasteStatus('⚠️ 抓取失败：' + ((p && p.message) || '扩展无响应，请刷新页面后重试') + '，也可用三步引导手动导入');
+    }
+  } finally {
+    grabBusy = false; btn.textContent = old; btn.disabled = false;
+  }
+});
+// 富文本粘贴拦截：从 JoySpace 复制后 Ctrl+V → 自动拆解为 Markdown
+$('#pContent').addEventListener('paste', (e) => {
+  if (!e.clipboardData) return;
+  const html = e.clipboardData.getData('text/html');
+  const text = e.clipboardData.getData('text/plain') || '';
+  const r = processPaste(html, text);
+  if (r.mode === 'link') {
+    e.preventDefault();
+    $('#pLink').value = r.url;
+    showLinkGuide(true);
+    updatePasteStatus('✅ 已识别 JoySpace 链接：按上面三步把正文带进来');
+    return;
+  }
+  if (r.mode === 'md') {
+    e.preventDefault();
+    $('#pContent').value = r.md;
+    if (!$('#pTitle').value.trim() && r.title) $('#pTitle').value = r.title;
+    updatePasteStatus('✅ 已自动拆解排版并转为 Markdown（' + r.md.length + ' 字）——表格/标题/列表已保留，可直接保存');
+  }
+});
+$('#pSave').addEventListener('click', () => {
+  const title = $('#pTitle').value.trim();
+  const link = $('#pLink').value.trim();
+  const content = $('#pContent').value.trim();
+  if (!content && !link) return alert('内容不能为空：粘贴正文，或填入 JoySpace 链接');
+  const now = new Date().toISOString();
+  // 只存链接 → 链接文档（点开直达原文，但问答搜不到）
+  if (!content) {
+    if (!confirm('只保存链接（不带正文）：点开文档可直达 JoySpace 原文，\n但问答暂时搜不到内容；按弹窗里的三步导入正文后，\n就能在应用内阅读和问答。\n\n仍只保存链接？')) return;
+    return saveDoc({ id: newId(), title: title || 'JoySpace 文档', category: state.pasteCat, folderId: ($('#pFolder') && $('#pFolder').value) || null, url: link, content: '', createdAt: now, updatedAt: now });
+  }
+  // 有正文 → 存 Markdown 正文；若带 JoySpace 链接则同时记入 url（可「打开原文」）
+  const m = (link || content).match(JOY_LINK_RE);
+  saveDoc({
+    id: newId(), category: state.pasteCat, folderId: ($('#pFolder') && $('#pFolder').value) || null, createdAt: now, updatedAt: now,
+    title: title || extractTitleFromMd(content) || '未命名文档',
+    url: m ? m[0] : '', content,
+  });
+});
+
+// 文件上传
+const TEXT_EXT = /\.(txt|md|markdown|csv|json|log|yml|yaml|html?|xml)$/i;
+const MAX_SIZE = 2 * 1024 * 1024;
+function handleFiles(fileList, category, folderId) {
+  const files = [...fileList].filter((f) => f.size <= MAX_SIZE);
+  const skipped = fileList.length - files.length;
+  if (!files.length) return alert('没有可导入的文件（仅支持 2MB 内的文本文件）');
+  const docs = loadAll();
+  let ok = 0, empty = 0, done = 0;
+  files.forEach((f) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const content = String(reader.result || '');
+      if (!content.trim()) { empty++; }
+      else {
+        docs.unshift({ id: newId(), title: f.name.replace(/\.[^.]+$/, ''), category, folderId: folderId || null, content, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+        ok++;
+      }
+      if (++done === files.length) {
+        saveAll(docs);
+        const catName = category === 'rule' ? '规则类' : '信息类';
+        let msg = `成功导入 ${ok} 个文件到「${catName}」`;
+        if (empty) msg += `；${empty} 个空文件已跳过`;
+        if (skipped) msg += `；${skipped} 个超大文件已跳过`;
+        if (folderId) state.folderId = folderId;
+        loadDocs();
+        if (ok) alert(msg); else alert('导入失败：文件内容为空或不是文本格式（Word/PDF 暂不支持）');
+      }
+    };
+    reader.readAsText(f);
+  });
+}
+$('#btnUpload').addEventListener('click', () => $('#fileInput').click());
+$('#fileInput').addEventListener('change', (e) => {
+  handleFiles(e.target.files, state.category, state.folderId);
+  e.target.value = '';
+});
+// 弹窗内拖拽
+const dropZone = $('#pContent');
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const files = [...e.dataTransfer.files].filter((f) => TEXT_EXT.test(f.name));
+  if (files.length) handleFiles(files, state.pasteCat, ($('#pFolder') && $('#pFolder').value) || null);
+  else alert('请拖入 .txt / .md / .csv / .json 等文本文件');
+});
+
+// ---------- 问答 ----------
+$('#askForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const q = $('#askInput').value.trim();
+  if (!q) return;
+  $('#askInput').value = '';
+  addMsg('user', esc(q));
+  const thinking = addMsg('bot', '<span class="thinking">正在检索知识库</span>');
+  setTimeout(() => {
+    const r = findAnswer(loadAll(), q);
+    let html;
+    if (r.answer) {
+      const a = r.answer;
+      const catName = a.category === 'rule' ? '规则类' : '信息类';
+      const body = a.snippet
+        ? `<div>${esc(a.snippet)}</div>`
+        : (a.url
+          ? `<div>这篇是<b>链接文档</b>（正文尚未导入），可直接打开原文：</div>
+             <div class="ans-src"><a href="${escHtml(a.url)}" target="_blank" rel="noopener">🔗 打开 JoySpace 原文</a></div>`
+          : '');
+      html = `<div class="ans-title">《${esc(a.title)}》<span class="cat-chip">${catName}</span></div>${body}
+        <div class="ans-src">来源：<a data-doc="${a.docId}">查看全文 →</a></div>` +
+        (r.hits.length > 1 ? `<div class="hits">相关文档：${r.hits.slice(1).map((h) => `<button data-doc="${h.id}">${esc(h.title)}</button>`).join('')}</div>` : '');
+    } else {
+      html = '知识库里还没有找到与这个问题相关的内容。你可以把相关文档粘贴到「知识资产」里再试试。';
+    }
+    thinking.querySelector('.bubble').innerHTML = html;
+    bindDocLinks(thinking);
+  }, 350);
+});
+function addMsg(role, html) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.innerHTML = `<div class="bubble">${html}</div>`;
+  $('#chat').appendChild(div);
+  $('#chat').scrollTop = $('#chat').scrollHeight;
+  return div;
+}
+function bindDocLinks(container) {
+  container.querySelectorAll('[data-doc]').forEach((a) => {
+    a.addEventListener('click', () => {
+      document.querySelector('.nav-item[data-view="assets"]').click();
+      openDoc(a.dataset.doc);
+    });
+  });
+}
+
+// ---------- 导出 / 导入备份 ----------
+$('#btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify({ version: 2, folders: loadFolders(), docs: loadAll() }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'knowledge-backup.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+$('#btnImport').addEventListener('click', () => $('#importInput').click());
+$('#importInput').addEventListener('change', (e) => {
+  const f = e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(String(reader.result));
+      const arr = Array.isArray(data) ? data : (data && Array.isArray(data.docs) ? data.docs : null);
+      if (!arr) throw new Error('格式不对');
+      // v2.6：新版备份带 folders，老版备份（纯数组）也能导
+      const foldersIn = (!Array.isArray(data) && Array.isArray(data.folders)) ? data.folders : [];
+      if (foldersIn.length) {
+        const folders = loadFolders();
+        const fids = new Set(folders.map((f) => f.id));
+        let fn = 0;
+        for (const f of foldersIn) {
+          if (f && f.id && f.name && !fids.has(f.id)) {
+            folders.push({ id: f.id, name: String(f.name).slice(0, 24), category: f.category === 'rule' ? 'rule' : 'info' });
+            fids.add(f.id); fn++;
+          }
+        }
+        if (fn) saveFolders(folders);
+      }
+      const docs = loadAll();
+      const ids = new Set(docs.map((d) => d.id));
+      let n = 0;
+      for (const d of arr) {
+        if (!d || typeof d.title !== 'string') continue;
+        const doc = {
+          id: d.id && !ids.has(d.id) ? d.id : newId(),
+          title: d.title, category: d.category === 'rule' ? 'rule' : 'info',
+          folderId: d.folderId || null,
+          url: String(d.url || ''),
+          content: String(d.content || ''), updatedAt: d.updatedAt || new Date().toISOString(),
+        };
+        if (!ids.has(doc.id)) { docs.unshift(doc); ids.add(doc.id); n++; }
+      }
+      saveAll(docs); loadDocs();
+      alert(`成功导入 ${n} 篇文档` + (foldersIn.length ? ` 和文件夹结构` : ''));
+    } catch (err) { alert('导入失败：不是有效的备份文件'); }
+  };
+  reader.readAsText(f);
+});
+
+// ---------- v2.6 文件夹管理 ----------
+const LS_FOLDER_KEY = 'kqa_folders_v1';
+let memFolders = null;
+function loadFolders() {
+  try {
+    const raw = localStorage.getItem(LS_FOLDER_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) { /* 内存兑底 */ }
+  if (memFolders) return memFolders;
+  memFolders = [];
+  return memFolders;
+}
+function saveFolders(folders) {
+  memFolders = folders;
+  try { localStorage.setItem(LS_FOLDER_KEY, JSON.stringify(folders)); } catch (e) { /* 内存兑底 */ }
+}
+function foldersOf(cat) { return loadFolders().filter((f) => f.category === cat); }
+function folderName(id) {
+  if (!id) return null;
+  const f = loadFolders().find((x) => x.id === id);
+  return f ? f.name : null;
+}
+function newFolderId() { return 'f' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+
+function renderFolderBar() {
+  const bar = $('#folderBar');
+  if (!bar) return;
+  const catDocs = loadAll().filter((d) => d.category === state.category);
+  const folders = foldersOf(state.category);
+  const chips = [`<button class="folder-chip${state.folderId === null ? ' active' : ''}" data-fid=""><span class="fc-name">📁 全部</span><span class="fc-count">${catDocs.length}</span></button>`];
+  for (const f of folders) {
+    const n = catDocs.filter((d) => d.folderId === f.id).length;
+    chips.push(`<button class="folder-chip${state.folderId === f.id ? ' active' : ''}" data-fid="${f.id}" title="${escHtml(f.name)}"><span class="fc-name">📁 ${escHtml(f.name)}</span><span class="fc-count">${n}</span><span class="fc-act" data-act="rename" title="重命名">✏️</span><span class="fc-act" data-act="del" title="删除文件夹">✕</span></button>`);
+  }
+  chips.push(`<button class="folder-add" id="btnNewFolder">＋ 新建文件夹</button>`);
+  bar.innerHTML = chips.join('');
+  bar.querySelectorAll('.folder-chip').forEach((ch) => {
+    ch.addEventListener('click', (e) => {
+      const act = e.target.closest('.fc-act');
+      if (act) {
+        e.stopPropagation();
+        if (act.dataset.act === 'rename') openFolderModal('rename', ch.dataset.fid);
+        else deleteFolder(ch.dataset.fid);
+        return;
+      }
+      state.folderId = ch.dataset.fid || null;
+      showList(); loadDocs();
+    });
+  });
+  bar.querySelector('#btnNewFolder').addEventListener('click', () => openFolderModal('create'));
+}
+
+function deleteFolder(fid) {
+  const folders = loadFolders();
+  const f = folders.find((x) => x.id === fid);
+  if (!f) return;
+  const docs = loadAll();
+  const n = docs.filter((d) => d.folderId === fid).length;
+  if (!confirm(`删除文件夹「${f.name}」？\n里面的 ${n} 篇文档不会被删除，会移到「未分类」。`)) return;
+  saveFolders(folders.filter((x) => x.id !== fid));
+  docs.forEach((d) => { if (d.folderId === fid) d.folderId = null; });
+  saveAll(docs);
+  if (state.folderId === fid) state.folderId = null;
+  loadDocs();
+  showToast(`已删除文件夹「${f.name}」${n ? `，${n} 篇文档已移到「未分类」` : ''}`);
+}
+
+let fmEditId = null;
+function openFolderModal(mode, fid) {
+  fmEditId = mode === 'rename' ? fid : null;
+  const f = fmEditId ? loadFolders().find((x) => x.id === fmEditId) : null;
+  $('#fmTitle').textContent = f ? '重命名文件夹' : `新建文件夹（${state.category === 'rule' ? '规则类' : '信息类'}）`;
+  $('#fmSave').textContent = f ? '保存' : '创建';
+  $('#fmName').value = f ? f.name : '';
+  $('#folderModal').classList.remove('hidden');
+  $('#fmName').focus();
+}
+function saveFolderForm() {
+  const name = $('#fmName').value.trim();
+  if (!name) { $('#fmName').focus(); return; }
+  const folders = loadFolders();
+  if (fmEditId) {
+    const f = folders.find((x) => x.id === fmEditId);
+    if (f) f.name = name;
+    saveFolders(folders);
+    showToast(`已重命名为「${name}」`);
+  } else {
+    const nf = { id: newFolderId(), name, category: state.category };
+    folders.push(nf);
+    saveFolders(folders);
+    state.folderId = nf.id; // 创建后自动进入，方便直接往里加文档
+    showToast(`已创建文件夹「${name}」，已自动进入，往里加文档吧`);
+  }
+  $('#folderModal').classList.add('hidden');
+  loadDocs();
+}
+$('#fmCancel').addEventListener('click', () => $('#folderModal').classList.add('hidden'));
+$('#folderModal').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) $('#folderModal').classList.add('hidden');
+});
+$('#fmSave').addEventListener('click', saveFolderForm);
+$('#fmName').addEventListener('keydown', (e) => { if (e.key === 'Enter') saveFolderForm(); });
+
+// 点击空白处收起「移动到文件夹」菜单
+document.addEventListener('click', () => {
+  document.querySelectorAll('.move-menu').forEach((m) => m.classList.add('hidden'));
+});
+
+// ---------- 启动 ----------
+loadDocs();
+</script>
+</body>
+</html>
